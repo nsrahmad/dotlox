@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "dotlox": {
+      "commandName": "Project",
+      "commandLineArgs": "Program.cs",
+      "workingDirectory": "E:\\Softwares\\repos\\dotlox\\dotlox"
+    }
+  }
+}
