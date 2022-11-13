@@ -2,7 +2,7 @@
   "profiles": {
     "dotlox": {
       "commandName": "Project",
-      "workingDirectory": "E:\\Softwares\\repos\\dotlox\\dotlox"
+      "workingDirectory": "/mnt/Data/Program Files/repos/dotlox/dotlox"
     }
   }
 }
