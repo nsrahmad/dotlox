@@ -1,4 +1,6 @@
-﻿using static TokenType;
+﻿using static dotlox.TokenType;
+
+namespace dotlox;
 
 internal class Scanner
 {

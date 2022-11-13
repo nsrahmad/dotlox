@@ -3,7 +3,9 @@ using static System.IO.Directory;
 using static System.IO.File;
 using static System.IO.Path;
 
-class Program
+namespace dotlox;
+
+internal static class Program
 {
     static bool hadError = false;
 

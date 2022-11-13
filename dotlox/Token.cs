@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics;
 
+namespace dotlox;
+
 public enum TokenType
 {
     // Single-character tokens.
