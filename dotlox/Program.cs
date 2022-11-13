@@ -7,22 +7,22 @@ namespace dotlox;
 
 internal static class Program
 {
-    static bool hadError = false;
+    private static bool _hadError = false;
 
-    static void Main(string[] args)
+    private static void Main(string[] args)
     {
-        if (args.Length > 1)
+        switch (args.Length)
         {
-            WriteLine("Usage: dotlox [script]");
-            System.Environment.Exit(64);
-        }
-        else if (args.Length == 1)
-        {
-            RunFile(args[0]);
-        }
-        else
-        {
-            RunPrompt();
+            case > 1:
+                WriteLine("Usage: dotlox [script]");
+                System.Environment.Exit(64);
+                break;
+            case 1:
+                RunFile(args[0]);
+                break;
+            default:
+                RunPrompt();
+                break;
         }
     }
     // Error handling
@@ -31,13 +31,13 @@ internal static class Program
         Report(line, "", message);
     }
 
-    static void Report(int line, string where, string message)
+    private static void Report(int line, string where, string message)
     {
         Console.Error.WriteLine($"[line {line}] Error {where}: {message}");
-        hadError = true;
+        _hadError = true;
     }
 
-    static void RunPrompt()
+    private static void RunPrompt()
     {
         while (true)
         {
@@ -45,21 +45,21 @@ internal static class Program
             var line = ReadLine();
             if (line == null) break;
             Run(line);
-            hadError = false;
+            _hadError = false;
         }
     }
 
-    static void RunFile(string v)
+    private static void RunFile(string v)
     {
         var path = Combine(GetCurrentDirectory(), v);
         Run(ReadAllText(path));
-        if (hadError) Environment.Exit(65);
+        if (_hadError) Environment.Exit(65);
     }
 
-    static void Run(string v)
+    private static void Run(string v)
     {
         var scanner = new Scanner(v);
-        List<Token> tokens = scanner.ScanTokens();
+        var tokens = scanner.ScanTokens();
 
         foreach (var token in tokens)
         {

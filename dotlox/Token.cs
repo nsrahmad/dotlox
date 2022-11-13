@@ -23,22 +23,22 @@ public enum TokenType
 [DebuggerDisplay($"{{{nameof(GetDebuggerDisplay)}(),nq}}")]
 public class Token
 {
-    private readonly TokenType type;
-    private readonly string lexeme;
-    private readonly object literal;
-    private readonly int line;
+    private readonly TokenType _type;
+    private readonly string _lexeme;
+    private readonly object _literal;
+    private readonly int _line;
 
     public Token(TokenType type, string lexeme, object literal, int line)
     {
-        this.type = type;
-        this.lexeme = lexeme;
-        this.literal = literal;
-        this.line = line;
+        this._type = type;
+        this._lexeme = lexeme;
+        this._literal = literal;
+        this._line = line;
     }
 
-    override public string ToString()
+    public override string ToString()
     {
-        return $"{type} {lexeme} {literal}";
+        return $"{_type} {_lexeme} {_literal}";
     }
 
     private string GetDebuggerDisplay() => ToString();
