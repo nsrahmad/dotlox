@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "dotlox": {
-      "commandName": "Project",
-      "workingDirectory": "/mnt/Data/Program Files/repos/dotlox/dotlox"
-    }
-  }
-}
