@@ -29,7 +29,6 @@ internal class Scanner
         {"var", VAR},
         {"while", WHILE}
     };
-    
     public Scanner(string source)
     {
         _source = source;
@@ -48,7 +47,7 @@ internal class Scanner
 
     private void ScanToken()
     {
-        var c = Advance();
+        char c = Advance();
         switch (c)
         {
             case '(': AddToken(LEFT_PAREN); break;
@@ -65,12 +64,15 @@ internal class Scanner
             case '=': AddToken(Match('=') ? EQUAL_EQUAL : EQUAL); break;
             case '<': AddToken(Match('=') ? LESS_EQUAL : LESS); break;
             case '>': AddToken(Match('=') ? GREATER_EQUAL : GREATER); break;
-            
+
             // / is special because of comments
             case '/':
                 if (Match('/'))
                 {
-                    while (Peek() != '\n' && !IsAtEnd()) Advance();
+                    while (Peek() != '\n' && !IsAtEnd())
+                    {
+                        _ = Advance();
+                    }
                 }
                 else
                 {
@@ -84,14 +86,19 @@ internal class Scanner
             case '\n':
                 _line++;
                 break;
-            case '"': HandleString();
+            case '"':
+                HandleString();
 
                 void HandleString()
                 {
                     while (Peek() != '"' && !IsAtEnd())
                     {
-                        if (Peek() == '\n') _line++;
-                        Advance();
+                        if (Peek() == '\n')
+                        {
+                            _line++;
+                        }
+
+                        _ = Advance();
                     }
 
                     if (IsAtEnd())
@@ -100,9 +107,9 @@ internal class Scanner
                         return;
                     }
                     // The closing ".
-                    Advance();
-                        
-                    var value = _source[(_start+1)..(_current - 1)];
+                    _ = Advance();
+
+                    string value = _source[(_start + 1)..(_current - 1)];
                     AddToken(STRING, value);
                 }
 
@@ -111,7 +118,7 @@ internal class Scanner
                 if (IsDigit(c))
                 {
                     HandleNumber();
-                } 
+                }
                 else if (IsAlpha(c))
                 {
                     Identifier();
@@ -123,27 +130,41 @@ internal class Scanner
                 break;
         }
     }
-    
+
     private void HandleNumber()
     {
-        while (IsDigit(Peek())) Advance();
+        while (IsDigit(Peek()))
+        {
+            _ = Advance();
+        }
 
         // Look for fractional part
         if (Peek() == '.' && IsDigit(PeekNext()))
         {
             //Consume the "."
-            Advance();
-            while (IsDigit(Peek())) Advance();
+            _ = Advance();
+            while (IsDigit(Peek()))
+            {
+                _ = Advance();
+            }
         }
-        AddToken(NUMBER, Double.Parse(_source[_start.._current]));
+        AddToken(NUMBER, double.Parse(_source[_start.._current]));
     }
 
     private void Identifier()
     {
-        while (IsAlphaNumeric(Peek())) Advance();
-        var text = _source[_start.._current];
-        Keywords.TryGetValue(text, out var type);
-        if (type == default) type = IDENTIFIER;
+        while (IsAlphaNumeric(Peek()))
+        {
+            _ = Advance();
+        }
+
+        string text = _source[_start.._current];
+        _ = Keywords.TryGetValue(text, out TokenType type);
+        if (type == default)
+        {
+            type = IDENTIFIER;
+        }
+
         AddToken(type);
     }
     private static bool IsDigit(char c1)
@@ -158,7 +179,7 @@ internal class Scanner
 
     private static bool IsAlpha(char c)
     {
-        return c is >= 'a' and <= 'z' or >= 'A' and <= 'Z' or '_';
+        return c is (>= 'a' and <= 'z') or (>= 'A' and <= 'Z') or '_';
     }
 
     private char PeekNext()
@@ -173,15 +194,23 @@ internal class Scanner
 
     private bool Match(char expected)
     {
-        if (IsAtEnd()) return false;
-        if (_source[_current] != expected) return false;
+        if (IsAtEnd())
+        {
+            return false;
+        }
+
+        if (_source[_current] != expected)
+        {
+            return false;
+        }
+
         _current++;
         return true;
     }
 
     private void AddToken(TokenType type, object p = default!)
     {
-        var text = _source[_start.._current];
+        string text = _source[_start.._current];
         _tokens.Add(new Token(type, text, p, _line));
     }
 
