@@ -89,30 +89,6 @@ internal class Scanner
             case '"':
                 HandleString();
 
-                void HandleString()
-                {
-                    while (Peek() != '"' && !IsAtEnd())
-                    {
-                        if (Peek() == '\n')
-                        {
-                            _line++;
-                        }
-
-                        _ = Advance();
-                    }
-
-                    if (IsAtEnd())
-                    {
-                        Program.Error(_line, "Unterminated string.");
-                        return;
-                    }
-                    // The closing ".
-                    _ = Advance();
-
-                    string value = _source[(_start + 1)..(_current - 1)];
-                    AddToken(STRING, value);
-                }
-
                 break;
             default:
                 if (IsDigit(c))
@@ -129,6 +105,30 @@ internal class Scanner
                 }
                 break;
         }
+    }
+
+    private void HandleString()
+    {
+        while (Peek() != '"' && !IsAtEnd())
+        {
+            if (Peek() == '\n')
+            {
+                _line++;
+            }
+
+            _ = Advance();
+        }
+
+        if (IsAtEnd())
+        {
+            Program.Error(_line, "Unterminated string.");
+            return;
+        }
+        // The closing ".
+        _ = Advance();
+
+        string value = _source[(_start + 1)..(_current - 1)];
+        AddToken(STRING, value);
     }
 
     private void HandleNumber()
