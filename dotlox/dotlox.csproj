@@ -7,5 +7,16 @@
     <Nullable>enable</Nullable>
     <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
   </PropertyGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="../AstGenerator/AstGenerator.csproj"
+    OutputItemType="Analyzer"
+    ReferenceOutputAssembly="false">
+    </ProjectReference>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Compile Remove="Expr.cs" />
+  </ItemGroup>
 
 </Project>
