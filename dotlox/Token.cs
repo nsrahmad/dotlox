@@ -18,4 +18,4 @@ public enum TokenType
     EOF
 }
 
-public record Token(TokenType Type, string Lexeme, object Literal, int Line);
+public record struct Token(TokenType Type, string Lexeme, object Literal, int Line);
