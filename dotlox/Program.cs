@@ -7,7 +7,9 @@ namespace dotlox;
 
 internal static class Program
 {
+    private static readonly Interpreter _interpreter = new Interpreter();
     private static bool _hadError;
+    private static bool _hadRuntimeError;
 
     private static void Main(string[] args)
     {
@@ -61,6 +63,7 @@ internal static class Program
         var path = Combine(GetCurrentDirectory(), v);
         Run(ReadAllText(path));
         if (_hadError) Environment.Exit(65);
+        if (_hadRuntimeError) Environment.Exit(70);
     }
 
     private static void Run(string v)
@@ -71,11 +74,17 @@ internal static class Program
         var parser = new Parser(tokens);
         var expression = parser.Parse();
         if (_hadError) return;
-        Console.WriteLine(new AstPrinter().Print(expression));
+        _interpreter.Interpret(expression);
     }
 
     public static void Error(int line, string message)
     {
         Report(line, "", message);
+    }
+
+    public static void RuntimeError(RuntimeError error)
+    {
+        Console.Error.WriteLine(error.Message + "\n[line " + error.Token.Line + "]");
+        _hadRuntimeError = true;
     }
 }
