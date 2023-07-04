@@ -55,7 +55,7 @@ public class AstGenerator : IIncrementalGenerator
         // Properties
         foreach (var f in fieldList)
         {
-            sb.AppendLine($$"""    public readonly {{f.Trim()}};""");
+            sb.AppendLine($"    public readonly {f.Trim()};");
         }
         
         // Constructor
