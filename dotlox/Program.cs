@@ -7,26 +7,15 @@ namespace dotlox;
 
 internal static class Program
 {
-    private static bool _hadError = false;
+    private static bool _hadError;
 
     private static void Main(string[] args)
     {
-        // // Ast Printer
-        // var expression = new Expr.Binary(
-        //     new Expr.Unary(
-        //         new Token(TokenType.MINUS, "-", null, 1),
-        //         new Expr.Literal(123)),
-        //     new Token(TokenType.STAR, "*", null, 1),
-        //     new Expr.Grouping(
-        //         new Expr.Literal(45.67)));
-        //
-        // Console.WriteLine(new AstPrinter().Print(expression));
-        
         switch (args.Length)
         {
             case > 1:
                 WriteLine("Usage: dotlox [script]");
-                System.Environment.Exit(64);
+                Environment.Exit(64);
                 break;
             case 1:
                 RunFile(args[0]);
@@ -37,9 +26,16 @@ internal static class Program
         }
     }
     // Error handling
-    public static void Error(int line, string message)
+    public static void Error(Token token, string message)
     {
-        Report(line, "", message);
+        if (token.Type == TokenType.EOF)
+        {
+            Report(token.Line, " at end", message);
+        }
+        else
+        {
+            Report(token.Line, " at '" + token.Lexeme + "'", message);
+        }
     }
 
     private static void Report(int line, string where, string message)
@@ -72,9 +68,14 @@ internal static class Program
         var scanner = new Scanner(v);
         var tokens = scanner.ScanTokens();
 
-        foreach (var token in tokens)
-        {
-            WriteLine(token);
-        }
+        var parser = new Parser(tokens);
+        var expression = parser.Parse();
+        if (_hadError) return;
+        Console.WriteLine(new AstPrinter().Print(expression));
+    }
+
+    public static void Error(int line, string message)
+    {
+        Report(line, "", message);
     }
 }
