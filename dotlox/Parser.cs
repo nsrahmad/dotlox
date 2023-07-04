@@ -20,7 +20,8 @@ public class Parser
         }
         catch (ParseError e)
         {
-            return null;
+            Console.Error.WriteLine(e.Message);
+            return null!;
         }
     }
 
@@ -139,29 +140,29 @@ public class Parser
         return true;
     }
 
-    private void Synchronize()
-    {
-        Advance();
-
-        while (!IsAtEnd())
-        {
-            if (Previous().Type == SEMICOLON) return;
-            switch (Peek().Type)
-            {
-                case CLASS:
-                case FUN:
-                case VAR:
-                case FOR:
-                case IF:
-                case WHILE:
-                case PRINT:
-                case RETURN:
-                    return;
-            }
-
-            Advance();
-        }
-    }
+    // private void Synchronize()
+    // {
+    //     Advance();
+    //
+    //     while (!IsAtEnd())
+    //     {
+    //         if (Previous().Type == SEMICOLON) return;
+    //         switch (Peek().Type)
+    //         {
+    //             case CLASS:
+    //             case FUN:
+    //             case VAR:
+    //             case FOR:
+    //             case IF:
+    //             case WHILE:
+    //             case PRINT:
+    //             case RETURN:
+    //                 return;
+    //         }
+    //
+    //         Advance();
+    //     }
+    // }
 
     private Token Advance()
     {
