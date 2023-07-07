@@ -12,17 +12,63 @@ public class Parser
         _tokens = tokens;
     }
 
-    public Expr Parse()
+    public List<Stmt> Parse()
+    {
+        var statements = new List<Stmt>();
+        while (!IsAtEnd())
+        {
+            statements.Add(Declaration());
+        }
+
+        return statements;
+    }
+
+    private Stmt Declaration()
     {
         try
         {
-            return Expression();
+            if (Match(VAR)) return VarDeclaration();
+            return Statement();
         }
         catch (ParseError e)
         {
             Console.Error.WriteLine(e.Message);
+            Synchronize();
             return null!;
         }
+    }
+
+    private Stmt VarDeclaration()
+    {
+        var name = Consume(IDENTIFIER, "Expect variable name.");
+        Expr? initializer = null;
+        if (Match(EQUAL))
+        {
+            initializer = Expression();
+        }
+
+        Consume(SEMICOLON, "Expect ';' after variable declaration.");
+        return new Stmt.Var(name, initializer);
+    }
+
+    private Stmt Statement()
+    {
+        if (Match(PRINT)) return PrintStatement();
+        return ExpressionStatement();
+    }
+
+    private Stmt ExpressionStatement()
+    {
+        var expr = Expression();
+        Consume(SEMICOLON, "Expect ';' after expression.");
+        return new Stmt.Expression(expr);
+    }
+
+    private Stmt PrintStatement()
+    {
+        var value = Expression();
+        Consume(SEMICOLON, "Expect ';' after value.");
+        return new Stmt.Print(value);
     }
 
     // expression     → equality ;
@@ -97,7 +143,7 @@ public class Parser
 
     }
 
-    // primary        → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" ;
+    // primary        → NUMBER | STRING | "true" | "false" | "nil" | IDENTIFIER | "(" expression ")" ;
     private Expr Primary()
     {
         if (Match(FALSE)) return new Expr.Literal(false);
@@ -109,6 +155,11 @@ public class Parser
             return new Expr.Literal(Previous().Literal);
         }
 
+        if (Match(IDENTIFIER))
+        {
+            return new Expr.Variable(Previous());
+        }
+
         if (Match(LEFT_PAREN))
         {
             var expr = Expression();
@@ -118,7 +169,6 @@ public class Parser
         throw Error(Peek(), "Expect expression.");
     }
 
-    // ReSharper disable once UnusedMethodReturnValue.Local
     private Token Consume(TokenType type, string message)
     {
         if (Check(type)) return Advance();
@@ -140,29 +190,29 @@ public class Parser
         return true;
     }
 
-    // private void Synchronize()
-    // {
-    //     Advance();
-    //
-    //     while (!IsAtEnd())
-    //     {
-    //         if (Previous().Type == SEMICOLON) return;
-    //         switch (Peek().Type)
-    //         {
-    //             case CLASS:
-    //             case FUN:
-    //             case VAR:
-    //             case FOR:
-    //             case IF:
-    //             case WHILE:
-    //             case PRINT:
-    //             case RETURN:
-    //                 return;
-    //         }
-    //
-    //         Advance();
-    //     }
-    // }
+    private void Synchronize()
+    {
+        Advance();
+    
+        while (!IsAtEnd())
+        {
+            if (Previous().Type == SEMICOLON) return;
+            switch (Peek().Type)
+            {
+                case CLASS:
+                case FUN:
+                case VAR:
+                case FOR:
+                case IF:
+                case WHILE:
+                case PRINT:
+                case RETURN:
+                    return;
+            }
+    
+            Advance();
+        }
+    }
 
     private Token Advance()
     {

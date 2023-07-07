@@ -1,18 +1,27 @@
 namespace dotlox;
 
-public class Interpreter : Expr.IVisitor<object>
+public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
 {
-    public void Interpret(Expr expression)
+    private readonly Environment _environment = new();
+    
+    public void Interpret(List<Stmt> statements)
     {
         try
         {
-            var value = Evaluate(expression);
-            Console.WriteLine(Stringify(value));
+            foreach (var statement in statements)
+            {
+                Execute(statement);
+            }
         }
         catch (RuntimeError e)
         {
             Program.RuntimeError(e);
         }
+    }
+
+    private void Execute(Stmt statement)
+    {
+        statement.Accept(this);
     }
 
     private static string Stringify(object? obj)
@@ -120,12 +129,42 @@ public class Interpreter : Expr.IVisitor<object>
         return null!;
     }
 
+    public object VisitVariableExpr(Expr.Variable expr)
+    {
+        return _environment.Get(expr.Name);
+    }
+
     private static bool IsTruthy(object? obj)
     {
         if (obj == null) return false;
         var b = obj as bool?;
         return b ?? true;
 
+    }
+
+    public object? VisitExpressionStmt(Stmt.Expression stmt)
+    {
+        Evaluate(stmt.expression);
+        return null;
+    }
+
+    public object? VisitPrintStmt(Stmt.Print stmt)
+    {
+        var value = Evaluate(stmt.expression);
+        Console.WriteLine(Stringify(value));
+        return null;
+    }
+
+    public object? VisitVarStmt(Stmt.Var stmt)
+    {
+        object? value = null;
+        if (stmt.Initializer != null)
+        {
+            value = Evaluate(stmt.Initializer);
+        }
+
+        _environment.Define(stmt.Name.Lexeme, value);
+        return null;
     }
 }
 
