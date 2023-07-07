@@ -17,18 +17,29 @@ public class AstGenerator : IIncrementalGenerator
             "Grouping : Expr Expression",
             "Literal : object Value",
             "Unary : Token Operator, Expr Right",
+            "Variable : Token Name"
+        });
+        
+        var stmt = DefineAst("Stmt", new List<string>
+        {
+            "Expression : Expr expression",
+            "Print : Expr expression",
+            "Var : Token Name, Expr Initializer"
         });
         
         initContext.RegisterPostInitializationOutput(ctx => ctx.AddSource(
             "Expr.g.cs",
             SourceText.From(expr, Encoding.UTF8)));
+        initContext.RegisterPostInitializationOutput(ctx => ctx.AddSource(
+            "Stmt.g.cs",
+            SourceText.From(stmt, Encoding.UTF8)));
     }
 
     private string DefineAst(string baseName, List<string> types)
     {
         StringBuilder sb = new();
         sb.AppendLine("namespace dotlox;\n");
-        sb.AppendLine($$"""public abstract class {{baseName}} {""");
+        sb.Append("public abstract class ").Append(baseName).AppendLine(" {");
         // Visitor interface
         DefineVisitor(sb, baseName, types);
         
