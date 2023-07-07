@@ -47,7 +47,7 @@ internal class Scanner
 
     private void ScanToken()
     {
-        char c = Advance();
+        var c = Advance();
         switch (c)
         {
             case '(': AddToken(LEFT_PAREN); break;
@@ -127,7 +127,7 @@ internal class Scanner
         // The closing ".
         _ = Advance();
 
-        string value = _source[(_start + 1)..(_current - 1)];
+        var value = _source[(_start + 1)..(_current - 1)];
         AddToken(STRING, value);
     }
 
@@ -158,8 +158,8 @@ internal class Scanner
             _ = Advance();
         }
 
-        string text = _source[_start.._current];
-        _ = Keywords.TryGetValue(text, out TokenType type);
+        var text = _source[_start.._current];
+        _ = Keywords.TryGetValue(text, out var type);
         if (type == default)
         {
             type = IDENTIFIER;
@@ -210,7 +210,7 @@ internal class Scanner
 
     private void AddToken(TokenType type, object p = default!)
     {
-        string text = _source[_start.._current];
+        var text = _source[_start.._current];
         _tokens.Add(new Token(type, text, p, _line));
     }
 

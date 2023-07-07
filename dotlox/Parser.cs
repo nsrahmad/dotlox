@@ -27,8 +27,7 @@ public class Parser
     {
         try
         {
-            if (Match(VAR)) return VarDeclaration();
-            return Statement();
+            return Match(VAR) ? VarDeclaration() : Statement();
         }
         catch (ParseError e)
         {
@@ -53,8 +52,7 @@ public class Parser
 
     private Stmt Statement()
     {
-        if (Match(PRINT)) return PrintStatement();
-        return ExpressionStatement();
+        return Match(PRINT) ? PrintStatement() : ExpressionStatement();
     }
 
     private Stmt ExpressionStatement()
@@ -71,10 +69,29 @@ public class Parser
         return new Stmt.Print(value);
     }
 
-    // expression     → equality ;
+    // expression     → assignment ;
     private Expr Expression()
     {
-        return Equality();
+        return Assignment();
+    }
+
+    private Expr Assignment()
+    {
+        var expr = Equality();
+
+        if (Match(EQUAL))
+        {
+            var equals = Previous();
+            var value = Assignment();
+
+            if (expr is Expr.Variable variable)
+            {
+                return new Expr.Assign(variable.Name, value);
+            }
+            _ = Error(equals, "Invalid Assignment target.");
+        }
+
+        return expr;
     }
 
     // equality       → comparison ( ( "!=" | "==" ) comparison )* ;
@@ -83,8 +100,8 @@ public class Parser
         var expr = Comparison();
         while (Match(BANG_EQUAL, EQUAL_EQUAL))
         {
-            Token op = Previous();
-            Expr right = Comparison();
+            var op = Previous();
+            var right = Comparison();
             expr = new Expr.Binary(expr, op, right);
         }
 
@@ -109,7 +126,7 @@ public class Parser
     private Expr Term()
     {
         var expr = Factor();
-        while (Match(MINUS,PLUS))
+        while (Match(MINUS, PLUS))
         {
             var op = Previous();
             var right = Factor();
@@ -123,7 +140,7 @@ public class Parser
     private Expr Factor()
     {
         var expr = Unary();
-        while (Match(SLASH,STAR))
+        while (Match(SLASH, STAR))
         {
             var op = Previous();
             var right = Unary();
@@ -136,7 +153,11 @@ public class Parser
     // unary          → ( "!" | "-" ) unary | primary ;
     private Expr Unary()
     {
-        if (!Match(BANG, MINUS)) return Primary();
+        if (!Match(BANG, MINUS))
+        {
+            return Primary();
+        }
+
         var op = Previous();
         var right = Unary();
         return new Expr.Unary(op, right);
@@ -146,9 +167,20 @@ public class Parser
     // primary        → NUMBER | STRING | "true" | "false" | "nil" | IDENTIFIER | "(" expression ")" ;
     private Expr Primary()
     {
-        if (Match(FALSE)) return new Expr.Literal(false);
-        if (Match(TRUE)) return new Expr.Literal(true);
-        if (Match(NIL)) return new Expr.Literal(null);
+        if (Match(FALSE))
+        {
+            return new Expr.Literal(false);
+        }
+
+        if (Match(TRUE))
+        {
+            return new Expr.Literal(true);
+        }
+
+        if (Match(NIL))
+        {
+            return new Expr.Literal(null);
+        }
 
         if (Match(NUMBER, STRING))
         {
@@ -171,8 +203,7 @@ public class Parser
 
     private Token Consume(TokenType type, string message)
     {
-        if (Check(type)) return Advance();
-        throw Error(Peek(), message);
+        return Check(type) ? Advance() : throw Error(Peek(), message);
     }
 
     private static ParseError Error(Token token, string message)
@@ -181,22 +212,32 @@ public class Parser
         return new ParseError();
     }
 
-    private class ParseError : ApplicationException { }
+    private class ParseError : ApplicationException
+    {
+    }
 
     private bool Match(params TokenType[] types)
     {
-        if (!types.Any(Check)) return false;
-        Advance();
+        if (!types.Any(Check))
+        {
+            return false;
+        }
+
+        _ = Advance();
         return true;
     }
 
     private void Synchronize()
     {
-        Advance();
-    
+        _ = Advance();
+
         while (!IsAtEnd())
         {
-            if (Previous().Type == SEMICOLON) return;
+            if (Previous().Type == SEMICOLON)
+            {
+                return;
+            }
+
             switch (Peek().Type)
             {
                 case CLASS:
@@ -209,14 +250,18 @@ public class Parser
                 case RETURN:
                     return;
             }
-    
-            Advance();
+
+            _ = Advance();
         }
     }
 
     private Token Advance()
     {
-        if (!IsAtEnd()) _current++;
+        if (!IsAtEnd())
+        {
+            _current++;
+        }
+
         return Previous();
     }
 
@@ -237,7 +282,6 @@ public class Parser
 
     private bool Check(TokenType tokenType)
     {
-        if (IsAtEnd()) return false;
-        return Peek().Type == tokenType;
+        return !IsAtEnd() && Peek().Type == tokenType;
     }
 }

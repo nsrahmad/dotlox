@@ -11,11 +11,18 @@ public class Environment
 
     public object Get(Token name)
     {
-        if (_values.TryGetValue(name.Lexeme, out var value))
-        {
-            return value;
-        }
+        return _values.TryGetValue(name.Lexeme, out var value)
+            ? value
+            : throw new RuntimeError(name, "Undefined variable '" + name.Lexeme + "'.");
+    }
 
-        throw new RuntimeError(name, "Undefined variable '" + name.Lexeme + "'.");
+    public void Assign(Token name, object value)
+    {
+        if (_values.ContainsKey(name.Lexeme))
+        {
+            _values[name.Lexeme] = value;
+            return;
+        }
+        throw new RuntimeError(name, $"Undefined variable '{name.Lexeme}'.");
     }
 }
