@@ -2,7 +2,7 @@ namespace dotlox;
 
 public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
 {
-    private readonly Environment _environment = new();
+    private Environment _environment = new();
     
     public void Interpret(List<Stmt> statements)
     {
@@ -165,6 +165,28 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
 
         _environment.Define(stmt.Name.Lexeme, value);
         return null;
+    }
+
+    public object? VisitBlockStmt(Stmt.Block stmt)
+    {
+        ExecuteBlock(stmt.Statements, new Environment(_environment));
+        return null;
+    }
+
+    private void ExecuteBlock(List<Stmt> statements, Environment environment)
+    {
+        var previous = _environment;
+        try
+        {
+            _environment = environment;
+            foreach (var item in statements)
+            {
+                Execute(item);
+            }
+        } finally
+        {
+            _environment = previous;
+        }
     }
 
     public object VisitAssignExpr(Expr.Assign expr)

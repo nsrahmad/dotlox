@@ -12,11 +12,7 @@
     <ProjectReference Include="../AstGenerator/AstGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false">
     </ProjectReference>
   </ItemGroup>
-  
-  <ItemGroup>
-    <Compile Remove="Expr.cs" />
-  </ItemGroup>
-  
+	
   <ItemGroup>
     <None Update="Test.clox">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

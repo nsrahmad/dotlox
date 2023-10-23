@@ -2,6 +2,18 @@ namespace dotlox;
 
 public class Environment
 {
+    private readonly Environment? _enclosing;
+
+    public Environment(Environment enclosing)
+    {
+        _enclosing = enclosing;
+    }
+
+    public Environment()
+    {
+        _enclosing = null;
+    }
+
     private readonly Dictionary<string, object> _values = new();
 
     public void Define(string name, object? value)
@@ -13,7 +25,9 @@ public class Environment
     {
         return _values.TryGetValue(name.Lexeme, out var value)
             ? value
-            : throw new RuntimeError(name, "Undefined variable '" + name.Lexeme + "'.");
+            : (_enclosing != null)
+                ? _enclosing.Get(name)
+                : throw new RuntimeError(name, "Undefined variable '" + name.Lexeme + "'.");
     }
 
     public void Assign(Token name, object value)
@@ -21,6 +35,11 @@ public class Environment
         if (_values.ContainsKey(name.Lexeme))
         {
             _values[name.Lexeme] = value;
+            return;
+        }
+        if (_enclosing != null)
+        {
+            _enclosing.Assign(name, value);
             return;
         }
         throw new RuntimeError(name, $"Undefined variable '{name.Lexeme}'.");

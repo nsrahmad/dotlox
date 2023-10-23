@@ -52,7 +52,20 @@ public class Parser
 
     private Stmt Statement()
     {
-        return Match(PRINT) ? PrintStatement() : ExpressionStatement();
+        if (Match(PRINT)) return PrintStatement();
+        if (Match(LEFT_BRACE)) return new Stmt.Block(Block());
+        return ExpressionStatement();
+    }
+
+    private List<Stmt> Block()
+    {
+        var statements = new List<Stmt>();
+        while (!Check(RIGHT_BRACE) && !IsAtEnd())
+        {
+            statements.Add(Declaration());
+        }
+        Consume(RIGHT_BRACE, "Expect '}' after block.");
+        return statements;
     }
 
     private Stmt ExpressionStatement()

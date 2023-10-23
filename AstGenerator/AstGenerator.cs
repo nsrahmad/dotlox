@@ -23,6 +23,7 @@ public class AstGenerator : IIncrementalGenerator
         
         var stmt = DefineAst("Stmt", new List<string>
         {
+            "Block : List<Stmt> Statements",
             "Expression : Expr expression",
             "Print : Expr expression",
             "Var : Token Name, Expr Initializer"
