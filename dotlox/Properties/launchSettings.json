@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "dotlox": {
+      "commandName": "Project",
+      "commandLineArgs": "Test.clox"
+    }
+  }
+}
