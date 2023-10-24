@@ -65,14 +65,12 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
                 CheckNumberOperand(expr.Operator, left, right);
                 return (double) left - (double) right;
             case TokenType.PLUS:
-                switch (left)
+                return left switch
                 {
-                    case double l when right is double r:
-                        return l + r;
-                    case string sl when right is string sr:
-                        return sl + sr;
-                }
-                throw new RuntimeError(expr.Operator, "Operands must be two numbers or two strings.");
+                    double l when right is double r => l + r,
+                    string sl when right is string sr => sl + sr,
+                    _ => throw new RuntimeError(expr.Operator, "Operands must be two numbers or two strings.")
+                };
             case TokenType.SLASH:
                 CheckNumberOperand(expr.Operator, left, right);
                 return (double) left / (double) right;
@@ -118,15 +116,12 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
     public object VisitUnaryExpr(Expr.Unary expr)
     {
         var right = Evaluate(expr.Right);
-        switch (expr.Operator.Type)
+        return expr.Operator.Type switch
         {
-            case TokenType.BANG:
-                return !IsTruthy(right);
-            case TokenType.MINUS:
-                return -(double) right;
-        }
-
-        return null!;
+            TokenType.BANG => !IsTruthy(right),
+            TokenType.MINUS => -(double)right,
+            _ => null!
+        };
     }
 
     public object VisitVariableExpr(Expr.Variable expr)
