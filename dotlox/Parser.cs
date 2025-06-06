@@ -54,8 +54,7 @@ public class Parser
     {
         if (Match(IF)) return IfStatement();
         if (Match(PRINT)) return PrintStatement();
-        if (Match(LEFT_BRACE)) return new Stmt.Block(Block());
-        return ExpressionStatement();
+        return Match(LEFT_BRACE) ? new Stmt.Block(Block()) : ExpressionStatement();
     }
 
     private Stmt IfStatement()
@@ -107,7 +106,7 @@ public class Parser
 
     private Expr Assignment()
     {
-        var expr = Equality();
+        var expr = Or();
 
         if (Match(EQUAL))
         {
@@ -119,6 +118,34 @@ public class Parser
                 return new Expr.Assign(variable.Name, value);
             }
             _ = Error(equals, "Invalid Assignment target.");
+        }
+
+        return expr;
+    }
+
+    private Expr Or()
+    {
+        var expr = And();
+
+        while (Match(OR))
+        {
+            var op = Previous();
+            var right = And();
+            expr = new Expr.Logical(expr, op, right);
+        }
+
+        return expr;
+    }
+
+    private Expr And()
+    {
+        var expr = Equality();
+
+        while (Match(AND))
+        {
+            var op = Previous();
+            var right = Equality();
+            expr = new Expr.Logical(expr, op, right);
         }
 
         return expr;
