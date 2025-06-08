@@ -3,7 +3,7 @@ namespace dotlox;
 public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
 {
     private Environment _environment = new();
-    
+
     public void Interpret(List<Stmt> statements)
     {
         try
@@ -51,19 +51,19 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
                 return IsEqual(left, right);
             case TokenType.GREATER:
                 CheckNumberOperand(expr.Operator, left, right);
-                return (double) left > (double) right;
+                return (double)left > (double)right;
             case TokenType.GREATER_EQUAL:
                 CheckNumberOperand(expr.Operator, left, right);
-                return (double) left >= (double) right;
+                return (double)left >= (double)right;
             case TokenType.LESS:
                 CheckNumberOperand(expr.Operator, left, right);
-                return (double) left < (double) right;
+                return (double)left < (double)right;
             case TokenType.LESS_EQUAL:
                 CheckNumberOperand(expr.Operator, left, right);
-                return (double) left <= (double) right;
+                return (double)left <= (double)right;
             case TokenType.MINUS:
                 CheckNumberOperand(expr.Operator, left, right);
-                return (double) left - (double) right;
+                return (double)left - (double)right;
             case TokenType.PLUS:
                 return left switch
                 {
@@ -73,10 +73,10 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
                 };
             case TokenType.SLASH:
                 CheckNumberOperand(expr.Operator, left, right);
-                return (double) left / (double) right;
+                return (double)left / (double)right;
             case TokenType.STAR:
                 CheckNumberOperand(expr.Operator, left, right);
-                return (double) left * (double) right;
+                return (double)left * (double)right;
         }
 
         return null!;
@@ -164,7 +164,8 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
         if (IsTruthy(Evaluate(stmt.condition)))
         {
             Execute(stmt.thenBranch);
-        } else if (stmt.elseBranch != null)
+        }
+        else if (stmt.elseBranch != null)
         {
             Execute(stmt.elseBranch);
         }
@@ -175,6 +176,16 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
     {
         var value = Evaluate(stmt.expression);
         Console.WriteLine(Stringify(value));
+        return null;
+    }
+
+    public object? VisitWhileStmt(Stmt.While stmt)
+    {
+        while (IsTruthy(Evaluate(stmt.condition)))
+        {
+            Execute(stmt.body);
+        }
+
         return null;
     }
 
@@ -206,7 +217,8 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
             {
                 Execute(item);
             }
-        } finally
+        }
+        finally
         {
             _environment = previous;
         }
