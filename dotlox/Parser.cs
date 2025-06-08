@@ -52,10 +52,63 @@ public class Parser
 
     private Stmt Statement()
     {
+        if (Match(FOR)) return ForStatement();
         if (Match(IF)) return IfStatement();
         if (Match(PRINT)) return PrintStatement();
         if (Match(WHILE)) return WhileStatement();
         return Match(LEFT_BRACE) ? new Stmt.Block(Block()) : ExpressionStatement();
+    }
+
+    private Stmt ForStatement()
+    {
+        Consume(LEFT_PAREN, "Expect '(' after 'for'.");
+
+        Stmt? initializer;
+        if (Match(SEMICOLON))
+        {
+            initializer = null;
+        } else if (Match(VAR))
+        {
+            initializer = VarDeclaration();
+        }
+        else
+        {
+            initializer = ExpressionStatement();
+        }
+
+        Expr? condition = null;
+        if (!Check(SEMICOLON))
+        {
+            condition = Expression();
+        }
+
+        Consume(SEMICOLON, "Expect ';' after loop condition.");
+
+        Expr? increment = null;
+        if (!Check(RIGHT_PAREN))
+        {
+            increment = Expression();
+        }
+
+        Consume(RIGHT_PAREN, "Expect ')' after 'for' loop");
+
+        Stmt body = Statement();
+
+        // de-sugaring for loop into while loop
+        if (increment != null)
+        {
+            body = new Stmt.Block([body, new Stmt.Expression(increment)]);
+        }
+
+        if (condition == null) condition = new Expr.Literal(true);
+        body = new Stmt.While(condition, body);
+
+        if (initializer != null)
+        {
+            body = new Stmt.Block([initializer, body]);
+        }
+
+        return body;
     }
 
     private Stmt WhileStatement()
