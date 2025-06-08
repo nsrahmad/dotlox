@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
-    <LangVersion>latestmajor</LangVersion>
+    <LangVersion>default</LangVersion>
     <TargetFramework>net9.0</TargetFramework>
   </PropertyGroup>
   
