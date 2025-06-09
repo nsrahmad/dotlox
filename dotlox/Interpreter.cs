@@ -2,7 +2,32 @@ namespace dotlox;
 
 public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
 {
-    private Environment _environment = new();
+    private static readonly Environment Globals = new();
+    private Environment _environment = Globals;
+
+    public Interpreter()
+    {
+        Globals.Define("clock", new FunctionalCallable(0, (_, _) => (DateTime.UtcNow - DateTime.UnixEpoch).TotalSeconds));
+    }
+
+    // A concrete implementation that wraps delegates.
+    private class FunctionalCallable(int arity, Func<Interpreter, List<object>, object> call) : ILoxCallable
+    {
+        public object Call(Interpreter interpreter, List<object> arguments)
+        {
+            return call(interpreter, arguments);
+        }
+
+        public int Arity()
+        {
+            return arity;
+        }
+
+        public override string ToString()
+        {
+            return "<native fn>";
+        }
+    }
 
     public void Interpret(List<Stmt> statements)
     {
@@ -80,6 +105,29 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
         }
 
         return null!;
+    }
+
+    public object VisitCallExpr(Expr.Call expr)
+    {
+        var callee = Evaluate(expr.Callee);
+
+        var arguments = new List<object>();
+        foreach (var argument in expr.Arguments)
+        {
+            arguments.Add(Evaluate(argument));
+        }
+
+        if (callee is not ILoxCallable function)
+            throw new RuntimeError(expr.Paren, "Can only call functions and classes");
+
+        if (arguments.Count != function.Arity())
+        {
+            throw new RuntimeError(expr.Paren, "Expected " +
+                                               function.Arity() + " arguments but got " +
+                                               arguments.Count + ".");
+        }
+
+        return function.Call(this, arguments);
     }
 
     private static void CheckNumberOperand(Token op, object left, object right)
@@ -230,6 +278,12 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
         _environment.Assign(expr.Name, value);
         return value;
     }
+}
+
+public interface ILoxCallable
+{
+    object Call(Interpreter interpreter, List<object> arguments);
+    int Arity();
 }
 
 public class RuntimeError(Token token, string message) : Exception(message)

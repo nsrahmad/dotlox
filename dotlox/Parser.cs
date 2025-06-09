@@ -275,13 +275,48 @@ public class Parser
     {
         if (!Match(BANG, MINUS))
         {
-            return Primary();
+            return Call();
         }
 
         var op = Previous();
         var right = Unary();
         return new Expr.Unary(op, right);
 
+    }
+
+    private Expr Call()
+    {
+        var expr = Primary();
+
+        while (true)
+        {
+            if (Match(LEFT_PAREN))
+            {
+                expr = FinishCall(expr);
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        return expr;
+    }
+
+    private Expr FinishCall(Expr callee)
+    {
+        List<Expr> arguments = new List<Expr>();
+        if (!Check(RIGHT_PAREN))
+        {
+            do
+            {
+                if (arguments.Count >= 255) Error(Peek(), "Can't have more than 255 arguments.");
+                arguments.Add(Expression());
+            } while (Match(COMMA));
+        }
+
+        var paren = Consume(RIGHT_PAREN, "Expect ')' after arguments.");
+        return new Expr.Call(callee, paren, arguments);
     }
 
     // primary        → NUMBER | STRING | "true" | "false" | "nil" | IDENTIFIER | "(" expression ")" ;
