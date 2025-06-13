@@ -2,11 +2,12 @@ namespace dotlox;
 
 public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
 {
-    private static readonly Environment Globals = new();
-    private Environment _environment = Globals;
+    public readonly Environment Globals = new();
+    private Environment _environment;
 
     public Interpreter()
     {
+        _environment = Globals;
         Globals.Define("clock", new FunctionalCallable(0, (_, _) => (DateTime.UtcNow - DateTime.UnixEpoch).TotalSeconds));
     }
 
@@ -111,11 +112,7 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
     {
         var callee = Evaluate(expr.Callee);
 
-        var arguments = new List<object>();
-        foreach (var argument in expr.Arguments)
-        {
-            arguments.Add(Evaluate(argument));
-        }
+        var arguments = expr.Arguments.Select(Evaluate).ToList();
 
         if (callee is not ILoxCallable function)
             throw new RuntimeError(expr.Paren, "Can only call functions and classes");
@@ -127,7 +124,7 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
                                                arguments.Count + ".");
         }
 
-        return function.Call(this, arguments);
+        return function.Call(this, arguments) ?? 0;
     }
 
     private static void CheckNumberOperand(Token op, object left, object right)
@@ -207,6 +204,13 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
         return null;
     }
 
+    public object? VisitFunctionStmt(Stmt.Function stmt)
+    {
+        var function = new LoxFunction(stmt);
+        _environment.Define(stmt.Name.Lexeme, function);
+        return null;
+    }
+
     public object? VisitIfStmt(Stmt.If stmt)
     {
         if (IsTruthy(Evaluate(stmt.condition)))
@@ -255,7 +259,7 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
         return null;
     }
 
-    private void ExecuteBlock(List<Stmt> statements, Environment environment)
+    public void ExecuteBlock(List<Stmt> statements, Environment environment)
     {
         var previous = _environment;
         try
@@ -282,7 +286,7 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
 
 public interface ILoxCallable
 {
-    object Call(Interpreter interpreter, List<object> arguments);
+    object? Call(Interpreter interpreter, List<object> arguments);
     int Arity();
 }
 

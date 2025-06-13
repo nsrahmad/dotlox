@@ -27,6 +27,7 @@ public class AstGenerator : IIncrementalGenerator
         {
             "Block : List<Stmt> Statements",
             "Expression : Expr expression",
+	        "Function : Token Name, List<Token> Params, List<Stmt> body",
             "If : Expr condition, Stmt thenBranch, Stmt elseBranch",
             "Print : Expr expression",
             "While : Expr condition, Stmt body",

@@ -27,6 +27,7 @@ public class Parser
     {
         try
         {
+	        if (Match(FUN)) return Function("function");
             return Match(VAR) ? VarDeclaration() : Statement();
         }
         catch (ParseError e)
@@ -35,6 +36,31 @@ public class Parser
             Synchronize();
             return null!;
         }
+    }
+
+    private Stmt.Function Function(string kind)
+    {
+        var name = Consume(IDENTIFIER, $"Expect ${kind} name.");
+        Consume(LEFT_PAREN, $"Expect '(' after ${kind} name.");
+        List<Token> parameters = new();
+        if (!Check(RIGHT_PAREN))
+        {
+            do
+            {
+                if (parameters.Count >= 255)
+                {
+                    Error(Peek(), "Can't have more than 255 parameters.");
+                }
+
+                parameters.Add(Consume(IDENTIFIER, "Expect parameter name."));
+            } while (Match(COMMA));
+        }
+
+        Consume(RIGHT_PAREN, "Expect ')' after parameters.");
+
+        Consume(LEFT_BRACE, "Expect '{' before " + kind + " body.");
+        var body = Block();
+        return new Stmt.Function(name, parameters, body);
     }
 
     private Stmt VarDeclaration()
@@ -100,7 +126,7 @@ public class Parser
             body = new Stmt.Block([body, new Stmt.Expression(increment)]);
         }
 
-        if (condition == null) condition = new Expr.Literal(true);
+        condition ??= new Expr.Literal(true);
         body = new Stmt.While(condition, body);
 
         if (initializer != null)
