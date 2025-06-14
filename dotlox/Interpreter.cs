@@ -231,6 +231,13 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
         return null;
     }
 
+    public object? VisitReturnStmt(Stmt.Return stmt)
+    {
+        object? value = null;
+        if (stmt.Value != null) value = Evaluate(stmt.Value);
+        throw new Return(value);
+    }
+
     public object? VisitWhileStmt(Stmt.While stmt)
     {
         while (IsTruthy(Evaluate(stmt.condition)))
@@ -282,6 +289,11 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
         _environment.Assign(expr.Name, value);
         return value;
     }
+}
+
+public class Return(object? value) : Exception
+{
+    public readonly object? Value = value;
 }
 
 public interface ILoxCallable

@@ -30,6 +30,7 @@ public class AstGenerator : IIncrementalGenerator
 	        "Function : Token Name, List<Token> Params, List<Stmt> body",
             "If : Expr condition, Stmt thenBranch, Stmt elseBranch",
             "Print : Expr expression",
+            "Return : Token Keyword, Expr Value",
             "While : Expr condition, Stmt body",
             "Var : Token Name, Expr Initializer"
         });
