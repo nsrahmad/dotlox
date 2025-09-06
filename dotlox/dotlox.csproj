@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
     <LangVersion>default</LangVersion>
+    <PublishAot>true</PublishAot>
     <TargetFramework>net9.0</TargetFramework>
   </PropertyGroup>
   
