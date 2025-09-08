@@ -403,7 +403,7 @@ public class Parser
 
     private static ParseError Error(Token token, string message)
     {
-        Program.Error(token, message);
+        Lox.Error(token, message);
         return new ParseError();
     }
 

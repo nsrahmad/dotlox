@@ -5,7 +5,7 @@ using static System.IO.Path;
 
 namespace dotlox;
 
-internal static class Program
+internal static class Lox
 {
     private static readonly Interpreter Interpreter = new Interpreter();
     private static bool _hadError;
@@ -73,6 +73,9 @@ internal static class Program
 
         var parser = new Parser(tokens);
         var statements = parser.Parse();
+        if (_hadError) return;
+        var resolver = new Resolver(Interpreter);
+        resolver.Resolve(statements);
         if (_hadError) return;
         Interpreter.Interpret(statements);
     }

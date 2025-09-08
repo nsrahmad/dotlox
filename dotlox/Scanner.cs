@@ -101,7 +101,7 @@ internal class Scanner
                 }
                 else
                 {
-                    Program.Error(_line, "Unexpected character.");
+                    Lox.Error(_line, "Unexpected character.");
                 }
                 break;
         }
@@ -121,7 +121,7 @@ internal class Scanner
 
         if (IsAtEnd())
         {
-            Program.Error(_line, "Unterminated string.");
+            Lox.Error(_line, "Unterminated string.");
             return;
         }
         // The closing ".
