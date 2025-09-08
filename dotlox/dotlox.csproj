@@ -16,9 +16,12 @@
   </ItemGroup>
 	
   <ItemGroup>
-    <None Update="Test.clox">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+	  <None Update="Examples\Scopes.lox">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Examples\Fib.lox">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
   </ItemGroup>
 
 </Project>
