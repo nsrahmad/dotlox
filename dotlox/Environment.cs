@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace dotlox;
 
 public class Environment
@@ -43,5 +45,27 @@ public class Environment
             return;
         }
         throw new RuntimeError(name, $"Undefined variable '{name.Lexeme}'.");
+    }
+
+    public object GetAt(int distance, string name)
+    {
+        return Ancestor(distance)._values[name];
+    }
+
+    private Environment Ancestor(int distance)
+    {
+        var environment = this;
+        for (var i = 0; i < distance; i++)
+        {
+            if (environment != null) environment = environment._enclosing;
+        }
+
+        Debug.Assert(environment != null, nameof(environment) + " != null");
+        return environment;
+    }
+
+    public void AssignAt(int distance, Token name, object value)
+    {
+        Ancestor(distance)._values[name.Lexeme] = value;
     }
 }

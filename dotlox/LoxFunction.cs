@@ -1,10 +1,10 @@
 namespace dotlox;
 
-public class LoxFunction(Stmt.Function declaration) : ILoxCallable
+public class LoxFunction(Stmt.Function declaration, Environment closure) : ILoxCallable
 {
     public object? Call(Interpreter interpreter, List<object> arguments)
     {
-        var environment = new Environment(interpreter.Globals);
+        var environment = new Environment(closure);
         for (var i = 0; i < declaration.Params.Count; i++)
         {
             environment.Define(declaration.Params[i].Lexeme, arguments[i]);

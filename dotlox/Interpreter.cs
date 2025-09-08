@@ -2,13 +2,14 @@ namespace dotlox;
 
 public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
 {
-    public readonly Environment Globals = new();
+    private readonly Environment _globals = new();
     private Environment _environment;
+    private readonly Dictionary<Expr, int> _locals = new();
 
     public Interpreter()
     {
-        _environment = Globals;
-        Globals.Define("clock", new FunctionalCallable(0, (_, _) => (DateTime.UtcNow - DateTime.UnixEpoch).TotalSeconds));
+        _environment = _globals;
+        _globals.Define("clock", new FunctionalCallable(0, (_, _) => (DateTime.UtcNow - DateTime.UnixEpoch).TotalSeconds));
     }
 
     // A concrete implementation that wraps delegates.
@@ -41,7 +42,7 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
         }
         catch (RuntimeError e)
         {
-            Program.RuntimeError(e);
+            Lox.RuntimeError(e);
         }
     }
 
@@ -187,7 +188,12 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
 
     public object VisitVariableExpr(Expr.Variable expr)
     {
-        return _environment.Get(expr.Name);
+        return LookupVariable(expr.Name, expr);
+    }
+
+    private object LookupVariable(Token name, Expr expr)
+    {
+        return _locals.TryGetValue(expr, out var distance) ? _environment.GetAt(distance, name.Lexeme) : _globals.Get(name);
     }
 
     private static bool IsTruthy(object? obj)
@@ -206,7 +212,7 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
 
     public object? VisitFunctionStmt(Stmt.Function stmt)
     {
-        var function = new LoxFunction(stmt);
+        var function = new LoxFunction(stmt, _environment);
         _environment.Define(stmt.Name.Lexeme, function);
         return null;
     }
@@ -231,6 +237,7 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
         return null;
     }
 
+    // ReSharper disable once ReturnTypeCanBeNotNullable
     public object? VisitReturnStmt(Stmt.Return stmt)
     {
         object? value = null;
@@ -286,8 +293,22 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
     public object VisitAssignExpr(Expr.Assign expr)
     {
         var value = Evaluate(expr.Value);
-        _environment.Assign(expr.Name, value);
+
+        if (_locals.TryGetValue(expr, out var distance))
+        {
+            _environment.AssignAt(distance, expr.Name, value);
+        }
+        else
+        {
+            _globals.Assign(expr.Name, value);
+        }
+
         return value;
+    }
+
+    public void Resolve(Expr expr, int depth)
+    {
+        _locals[expr] = depth;
     }
 }
 
