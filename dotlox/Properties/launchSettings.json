@@ -2,7 +2,7 @@
   "profiles": {
     "dotlox": {
       "commandName": "Project",
-      "commandLineArgs": "Examples/Fib.lox"
+      "commandLineArgs": ""
     }
   }
 }
