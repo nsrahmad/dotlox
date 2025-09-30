@@ -14,14 +14,5 @@
     <ProjectReference Include="../AstGenerator/AstGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false">
     </ProjectReference>
   </ItemGroup>
-	
-  <ItemGroup>
-	  <None Update="Examples\Scopes.lox">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	  <None Update="Examples\Fib.lox">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-  </ItemGroup>
 
 </Project>
