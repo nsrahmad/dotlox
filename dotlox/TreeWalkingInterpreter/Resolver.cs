@@ -1,15 +1,24 @@
-﻿namespace dotlox;
+﻿namespace dotlox.TreeWalkingInterpreter;
 
 public class Resolver(Interpreter interpreter) : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 {
     private enum FunctionType
     {
         NONE,
-        FUNCTION
+        FUNCTION,
+        INITIALIZER,
+        METHOD
+    }
+
+    private enum ClassType
+    {
+        NONE,
+        CLASS
     }
 
     private readonly Stack<Dictionary<string, bool>> _scopes = new();
     private FunctionType _currentFunction = FunctionType.NONE;
+    private ClassType _currentClass = ClassType.NONE;
 
     public object? VisitAssignExpr(Expr.Assign expr)
     {
@@ -37,6 +46,12 @@ public class Resolver(Interpreter interpreter) : Expr.IVisitor<object?>, Stmt.IV
         return null;
     }
 
+    public object? VisitGetExpr(Expr.Get expr)
+    {
+        Resolve(expr.Object);
+        return null;
+    }
+
     public object? VisitGroupingExpr(Expr.Grouping expr)
     {
         Resolve(expr.Expression);
@@ -52,6 +67,24 @@ public class Resolver(Interpreter interpreter) : Expr.IVisitor<object?>, Stmt.IV
     {
         Resolve(expr.Left);
         Resolve(expr.Right);
+        return null;
+    }
+
+    public object? VisitSetExpr(Expr.Set expr)
+    {
+        Resolve(expr.Value);
+        Resolve(expr.Object);
+        return null;
+    }
+
+    public object? VisitThisExpr(Expr.This expr)
+    {
+        if (_currentClass == ClassType.NONE)
+        {
+            Lox.Error(expr.Keyword, "Can't use 'this' outside of a class.");
+            return null;
+        }
+        ResolveLocal(expr, expr.Keyword);
         return null;
     }
 
@@ -89,6 +122,32 @@ public class Resolver(Interpreter interpreter) : Expr.IVisitor<object?>, Stmt.IV
         BeginScope();
         Resolve(stmt.Statements);
         EndScope();
+        return null;
+    }
+
+    public object? VisitClassStmt(Stmt.Class stmt)
+    {
+        var enclosingClass = _currentClass;
+        _currentClass = ClassType.CLASS;
+
+        Declare(stmt.name);
+        Define(stmt.name);
+
+        BeginScope();
+        _scopes.Peek()["this"] = true;
+
+        foreach (var method in stmt.methods)
+        {
+            var declaration = FunctionType.METHOD;
+            if (method.Name.Lexeme == "init")
+            {
+                declaration = FunctionType.INITIALIZER;
+            }
+            ResolveFunction(method, declaration);
+
+        }
+        EndScope();
+        _currentClass = enclosingClass;
         return null;
     }
 
@@ -167,6 +226,10 @@ public class Resolver(Interpreter interpreter) : Expr.IVisitor<object?>, Stmt.IV
         }
         if (stmt.Value != null)
         {
+            if (_currentFunction == FunctionType.INITIALIZER)
+            {
+                Lox.Error(stmt.Keyword, "Can't return a value from an Initializer.");
+            }
             Resolve(stmt.Value);
         }
 

@@ -1,16 +1,10 @@
-namespace dotlox;
+namespace dotlox.TreeWalkingInterpreter;
 
 using static TokenType;
 
-public class Parser
+public class Parser(List<Token> tokens)
 {
-    private readonly List<Token> _tokens;
     private int _current;
-
-    public Parser(List<Token> tokens)
-    {
-        _tokens = tokens;
-    }
 
     public List<Stmt> Parse()
     {
@@ -27,7 +21,8 @@ public class Parser
     {
         try
         {
-	        if (Match(FUN)) return Function("function");
+            if (Match(CLASS)) return ClassDeclaration();
+            if (Match(FUN)) return Function("function");
             return Match(VAR) ? VarDeclaration() : Statement();
         }
         catch (ParseError e)
@@ -36,6 +31,21 @@ public class Parser
             Synchronize();
             return null!;
         }
+    }
+
+    private Stmt.Class ClassDeclaration()
+    {
+        var name = Consume(IDENTIFIER, "Expect class name.");
+        Consume(LEFT_BRACE, "Expect '{' before class body");
+
+        List<Stmt.Function> methods = [];
+        while (!Check(RIGHT_BRACE) && !IsAtEnd())
+        {
+            methods.Add(Function("method"));
+        }
+
+        Consume(RIGHT_BRACE, "Expect '}' after class body.");
+        return new Stmt.Class(name, methods);
     }
 
     private Stmt.Function Function(string kind)
@@ -107,7 +117,8 @@ public class Parser
         if (Match(SEMICOLON))
         {
             initializer = null;
-        } else if (Match(VAR))
+        }
+        else if (Match(VAR))
         {
             initializer = VarDeclaration();
         }
@@ -211,19 +222,21 @@ public class Parser
     {
         var expr = Or();
 
-        if (Match(EQUAL))
+        if (!Match(EQUAL)) return expr;
+        var equals = Previous();
+        var value = Assignment();
+
+        switch (expr)
         {
-            var equals = Previous();
-            var value = Assignment();
-
-            if (expr is Expr.Variable variable)
-            {
+            case Expr.Variable variable:
                 return new Expr.Assign(variable.Name, value);
-            }
-            _ = Error(equals, "Invalid Assignment target.");
-        }
+            case Expr.Get get:
+                return new Expr.Set(get.Object, get.Name, value);
+            default:
+                _ = Error(equals, "Invalid Assignment target.");
 
-        return expr;
+                return expr;
+        }
     }
 
     private Expr Or()
@@ -334,6 +347,11 @@ public class Parser
             {
                 expr = FinishCall(expr);
             }
+            else if (Match(DOT))
+            {
+                var name = Consume(IDENTIFIER, "Expect property name after '.'.");
+                expr = new Expr.Get(expr, name);
+            }
             else
             {
                 break;
@@ -380,6 +398,11 @@ public class Parser
         if (Match(NUMBER, STRING))
         {
             return new Expr.Literal(Previous().Literal);
+        }
+
+        if (Match(THIS))
+        {
+            return new Expr.This(Previous());
         }
 
         if (Match(IDENTIFIER))
@@ -462,7 +485,7 @@ public class Parser
 
     private Token Previous()
     {
-        return _tokens[_current - 1];
+        return tokens[_current - 1];
     }
 
     private bool IsAtEnd()
@@ -472,7 +495,7 @@ public class Parser
 
     private Token Peek()
     {
-        return _tokens[_current];
+        return tokens[_current];
     }
 
     private bool Check(TokenType tokenType)

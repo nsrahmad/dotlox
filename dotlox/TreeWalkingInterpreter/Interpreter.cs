@@ -1,4 +1,4 @@
-namespace dotlox;
+namespace dotlox.TreeWalkingInterpreter;
 
 public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
 {
@@ -128,6 +128,17 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
         return function.Call(this, arguments) ?? 0;
     }
 
+    public object VisitGetExpr(Expr.Get expr)
+    {
+        var obj = Evaluate(expr.Object);
+        if (obj is LoxInstance ins)
+        {
+            return ins.Get(expr.Name);
+        }
+
+        throw new RuntimeError(expr.Name, "Only instances have properties.");
+    }
+
     private static void CheckNumberOperand(Token op, object left, object right)
     {
         if (left is double && right is double) return;
@@ -175,6 +186,24 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
         return Evaluate(expr.Right);
     }
 
+    public object VisitSetExpr(Expr.Set expr)
+    {
+        var obj = Evaluate(expr.Object);
+        if (obj is not LoxInstance)
+        {
+            throw new RuntimeError(expr.Name, "Only instances have fields.");
+        }
+
+        var val = Evaluate(expr.Value);
+        ((LoxInstance)obj).Set(expr.Name, val);
+        return val;
+    }
+
+    public object VisitThisExpr(Expr.This expr)
+    {
+        return LookupVariable(expr.Keyword, expr);
+    }
+
     public object VisitUnaryExpr(Expr.Unary expr)
     {
         var right = Evaluate(expr.Right);
@@ -204,6 +233,22 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
 
     }
 
+    public object? VisitClassStmt(Stmt.Class stmt)
+    {
+        _environment.Define(stmt.name.Lexeme, null);
+        var methods = new Dictionary<string, LoxFunction>();
+
+        foreach (var method in stmt.methods)
+        {
+            var function = new LoxFunction(method, _environment, method.Name.Lexeme == "init");
+            methods[method.Name.Lexeme] = function;
+        }
+
+        var klass = new LoxClass(stmt.name.Lexeme, methods);
+        _environment.Assign(stmt.name, klass);
+        return null;
+    }
+
     public object? VisitExpressionStmt(Stmt.Expression stmt)
     {
         Evaluate(stmt.expression);
@@ -212,7 +257,7 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
 
     public object? VisitFunctionStmt(Stmt.Function stmt)
     {
-        var function = new LoxFunction(stmt, _environment);
+        var function = new LoxFunction(stmt, _environment, false);
         _environment.Define(stmt.Name.Lexeme, function);
         return null;
     }
@@ -315,12 +360,6 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
 public class Return(object? value) : Exception
 {
     public readonly object? Value = value;
-}
-
-public interface ILoxCallable
-{
-    object? Call(Interpreter interpreter, List<object> arguments);
-    int Arity();
 }
 
 public class RuntimeError(Token token, string message) : Exception(message)

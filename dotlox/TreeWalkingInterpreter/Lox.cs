@@ -3,7 +3,7 @@ using static System.IO.Directory;
 using static System.IO.File;
 using static System.IO.Path;
 
-namespace dotlox;
+namespace dotlox.TreeWalkingInterpreter;
 
 internal static class Lox
 {

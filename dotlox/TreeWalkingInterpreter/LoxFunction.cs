@@ -1,6 +1,6 @@
-namespace dotlox;
+namespace dotlox.TreeWalkingInterpreter;
 
-public class LoxFunction(Stmt.Function declaration, Environment closure) : ILoxCallable
+public class LoxFunction(Stmt.Function declaration, Environment closure, bool isInitializer) : ILoxCallable
 {
     public object? Call(Interpreter interpreter, List<object> arguments)
     {
@@ -16,9 +16,10 @@ public class LoxFunction(Stmt.Function declaration, Environment closure) : ILoxC
         }
         catch (Return returnValue)
         {
-            return returnValue.Value;
+            return isInitializer ? closure.GetAt(0, "this") : returnValue.Value;
         }
-        return null;
+
+        return isInitializer ? closure.GetAt(0, "this") : null;
     }
 
     public int Arity()
@@ -30,5 +31,12 @@ public class LoxFunction(Stmt.Function declaration, Environment closure) : ILoxC
     public override string ToString()
     {
         return $"<Fn {declaration.Name.Lexeme}>";
+    }
+
+    public LoxFunction Bind(LoxInstance instance)
+    {
+        var env = new Environment(closure);
+        env.Define("this", instance);
+        return new LoxFunction(declaration, env, isInitializer);
     }
 }

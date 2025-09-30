@@ -1,4 +1,4 @@
-﻿namespace dotlox;
+﻿namespace dotlox.TreeWalkingInterpreter;
 
 public enum TokenType
 {

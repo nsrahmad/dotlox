@@ -1,6 +1,6 @@
-﻿using static dotlox.TokenType;
+﻿using static dotlox.TreeWalkingInterpreter.TokenType;
 
-namespace dotlox;
+namespace dotlox.TreeWalkingInterpreter;
 
 internal class Scanner
 {
@@ -179,7 +179,7 @@ internal class Scanner
 
     private static bool IsAlpha(char c)
     {
-        return c is (>= 'a' and <= 'z') or (>= 'A' and <= 'Z') or '_';
+        return c is >= 'a' and <= 'z' or >= 'A' and <= 'Z' or '_';
     }
 
     private char PeekNext()

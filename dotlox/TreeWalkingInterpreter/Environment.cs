@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace dotlox;
+namespace dotlox.TreeWalkingInterpreter;
 
 public class Environment
 {
@@ -27,7 +27,7 @@ public class Environment
     {
         return _values.TryGetValue(name.Lexeme, out var value)
             ? value
-            : (_enclosing != null)
+            : _enclosing != null
                 ? _enclosing.Get(name)
                 : throw new RuntimeError(name, "Undefined variable '" + name.Lexeme + "'.");
     }
