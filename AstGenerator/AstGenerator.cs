@@ -20,6 +20,7 @@ public class AstGenerator : IIncrementalGenerator
             "Literal : object Value",
             "Logical : Expr Left, Token Operator, Expr Right",
             "Set : Expr Object, Token Name, Expr Value",
+            "Super : Token Keyword, Token Method",
             "This : Token Keyword",
             "Unary : Token Operator, Expr Right",
             "Variable : Token Name"
@@ -27,7 +28,7 @@ public class AstGenerator : IIncrementalGenerator
 
         var stmt = DefineAst("Stmt", [
             "Block : List<Stmt> Statements",
-            "Class : Token name, List<Stmt.Function> methods",
+            "Class : Token Name, Expr.Variable? superclass, List<Stmt.Function> methods",
             "Expression : Expr expression",
             "Function : Token Name, List<Token> Params, List<Stmt> body",
             "If : Expr condition, Stmt thenBranch, Stmt elseBranch",
@@ -49,6 +50,7 @@ public class AstGenerator : IIncrementalGenerator
     {
         StringBuilder sb = new();
         sb.AppendLine("namespace dotlox.TreeWalkingInterpreter;\n");
+        sb.AppendLine("#nullable enable");
         sb.Append("public abstract class ").Append(baseName).AppendLine(" {");
         // Visitor interface
         DefineVisitor(sb, baseName, types);
@@ -64,6 +66,7 @@ public class AstGenerator : IIncrementalGenerator
         sb.AppendLine("  public abstract R Accept<R>(IVisitor<R> visitor);");
         sb.AppendLine();
         sb.AppendLine("}");
+        sb.AppendLine("#nullable disable");
         return sb.ToString();
     }
 

@@ -13,7 +13,8 @@ public class Resolver(Interpreter interpreter) : Expr.IVisitor<object?>, Stmt.IV
     private enum ClassType
     {
         NONE,
-        CLASS
+        CLASS,
+        SUBCLASS
     }
 
     private readonly Stack<Dictionary<string, bool>> _scopes = new();
@@ -77,6 +78,20 @@ public class Resolver(Interpreter interpreter) : Expr.IVisitor<object?>, Stmt.IV
         return null;
     }
 
+    public object? VisitSuperExpr(Expr.Super expr)
+    {
+        if (_currentClass is ClassType.NONE)
+        {
+            Lox.Error(expr.Keyword, "Can't use 'super' outside of a class.");
+        }
+        else if (_currentClass is not ClassType.SUBCLASS)
+        {
+            Lox.Error(expr.Keyword, "Can't use 'super' in a class with no superclass.");
+        }
+        ResolveLocal(expr, expr.Keyword);
+        return null;
+    }
+
     public object? VisitThisExpr(Expr.This expr)
     {
         if (_currentClass == ClassType.NONE)
@@ -130,8 +145,24 @@ public class Resolver(Interpreter interpreter) : Expr.IVisitor<object?>, Stmt.IV
         var enclosingClass = _currentClass;
         _currentClass = ClassType.CLASS;
 
-        Declare(stmt.name);
-        Define(stmt.name);
+        Declare(stmt.Name);
+        Define(stmt.Name);
+
+        if (stmt.superclass is not null && stmt.Name.Lexeme == stmt.superclass.Name.Lexeme)
+        {
+            Lox.Error(stmt.superclass.Name, "A class can't inherit from itself.");
+        }
+        if (stmt.superclass is not null)
+        {
+            _currentClass = ClassType.SUBCLASS;
+            Resolve(stmt.superclass);
+        }
+
+        if (stmt.superclass is not null)
+        {
+            BeginScope();
+            _scopes.Peek()["super"] = true;
+        }
 
         BeginScope();
         _scopes.Peek()["this"] = true;
@@ -147,6 +178,11 @@ public class Resolver(Interpreter interpreter) : Expr.IVisitor<object?>, Stmt.IV
 
         }
         EndScope();
+
+        if (stmt.superclass is not null)
+        {
+            EndScope();
+        }
         _currentClass = enclosingClass;
         return null;
     }
@@ -208,7 +244,7 @@ public class Resolver(Interpreter interpreter) : Expr.IVisitor<object?>, Stmt.IV
     {
         Resolve(stmt.condition);
         Resolve(stmt.thenBranch);
-        if (stmt.elseBranch != null) Resolve(stmt.elseBranch);
+        Resolve(stmt.elseBranch);
         return null;
     }
 
@@ -220,18 +256,17 @@ public class Resolver(Interpreter interpreter) : Expr.IVisitor<object?>, Stmt.IV
 
     public object? VisitReturnStmt(Stmt.Return stmt)
     {
-        if (_currentFunction == FunctionType.NONE)
+        switch (_currentFunction)
         {
-            Lox.Error(stmt.Keyword, "Can't return from top level code.");
-        }
-        if (stmt.Value != null)
-        {
-            if (_currentFunction == FunctionType.INITIALIZER)
-            {
+            case FunctionType.NONE:
+                Lox.Error(stmt.Keyword, "Can't return from top level code.");
+                break;
+            case FunctionType.INITIALIZER:
                 Lox.Error(stmt.Keyword, "Can't return a value from an Initializer.");
-            }
-            Resolve(stmt.Value);
+                break;
         }
+
+        Resolve(stmt.Value);
 
         return null;
     }
@@ -246,10 +281,7 @@ public class Resolver(Interpreter interpreter) : Expr.IVisitor<object?>, Stmt.IV
     public object? VisitVarStmt(Stmt.Var stmt)
     {
         Declare(stmt.Name);
-        if (stmt.Initializer != null)
-        {
-            Resolve(stmt.Initializer);
-        }
+        Resolve(stmt.Initializer);
 
         Define(stmt.Name);
         return null;

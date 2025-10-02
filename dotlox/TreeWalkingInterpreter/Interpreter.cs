@@ -1,3 +1,5 @@
+using System.Collections.Frozen;
+
 namespace dotlox.TreeWalkingInterpreter;
 
 public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
@@ -199,6 +201,15 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
         return val;
     }
 
+    public object VisitSuperExpr(Expr.Super expr)
+    {
+        var distance = _locals[expr];
+        var superclass = (LoxClass)_environment.GetAt(distance, "super");
+        var obj = (LoxInstance)_environment.GetAt(distance - 1, "this");
+        var method = superclass.FindMethod(expr.Method.Lexeme);
+        return method is null ? throw new RuntimeError(expr.Method, $"Undefined property '{expr.Method.Lexeme}'.") : method.Bind(obj);
+    }
+
     public object VisitThisExpr(Expr.This expr)
     {
         return LookupVariable(expr.Keyword, expr);
@@ -235,7 +246,22 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
 
     public object? VisitClassStmt(Stmt.Class stmt)
     {
-        _environment.Define(stmt.name.Lexeme, null);
+        object? superclass = null;
+        if (stmt.superclass is not null)
+        {
+            superclass = Evaluate(stmt.superclass);
+            if (superclass is not LoxClass)
+            {
+                throw new RuntimeError(stmt.superclass.Name, "Superclass must be a class.");
+            }
+        }
+        _environment.Define(stmt.Name.Lexeme, null);
+        if (stmt.superclass is not null)
+        {
+            _environment = new Environment(_environment);
+            _environment.Define("super", superclass);
+        }
+
         var methods = new Dictionary<string, LoxFunction>();
 
         foreach (var method in stmt.methods)
@@ -244,8 +270,12 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
             methods[method.Name.Lexeme] = function;
         }
 
-        var klass = new LoxClass(stmt.name.Lexeme, methods);
-        _environment.Assign(stmt.name, klass);
+        var klass = new LoxClass(stmt.Name.Lexeme, superclass as LoxClass , methods.ToFrozenDictionary());
+        if (superclass is not null)
+        {
+            _environment = _environment.Enclosing!;
+        }
+        _environment.Assign(stmt.Name, klass);
         return null;
     }
 

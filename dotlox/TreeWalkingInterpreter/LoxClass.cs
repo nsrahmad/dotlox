@@ -1,9 +1,12 @@
-﻿namespace dotlox.TreeWalkingInterpreter;
+﻿using System.Collections.Frozen;
 
-public class LoxClass(string name, Dictionary<string, LoxFunction> methods) : ILoxCallable
+namespace dotlox.TreeWalkingInterpreter;
+
+public class LoxClass(string name, LoxClass? superclass, FrozenDictionary<string, LoxFunction> methods) : ILoxCallable
 {
     public string Name => name;
-    private Dictionary<string, LoxFunction> Methods => methods;
+    public LoxClass? Superclass => superclass;
+    private FrozenDictionary<string, LoxFunction> Methods => methods;
 
     public override string ToString()
     {
@@ -26,6 +29,6 @@ public class LoxClass(string name, Dictionary<string, LoxFunction> methods) : IL
 
     public LoxFunction? FindMethod(string method)
     {
-        return Methods.GetValueOrDefault(method);
+        return Methods.TryGetValue(method, out var value) ? value : Superclass?.FindMethod(name);
     }
 }

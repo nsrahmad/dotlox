@@ -4,16 +4,16 @@ namespace dotlox.TreeWalkingInterpreter;
 
 public class Environment
 {
-    private readonly Environment? _enclosing;
+    public readonly Environment? Enclosing;
 
     public Environment(Environment enclosing)
     {
-        _enclosing = enclosing;
+        Enclosing = enclosing;
     }
 
     public Environment()
     {
-        _enclosing = null;
+        Enclosing = null;
     }
 
     private readonly Dictionary<string, object> _values = new();
@@ -27,8 +27,8 @@ public class Environment
     {
         return _values.TryGetValue(name.Lexeme, out var value)
             ? value
-            : _enclosing != null
-                ? _enclosing.Get(name)
+            : Enclosing != null
+                ? Enclosing.Get(name)
                 : throw new RuntimeError(name, "Undefined variable '" + name.Lexeme + "'.");
     }
 
@@ -39,9 +39,9 @@ public class Environment
             _values[name.Lexeme] = value;
             return;
         }
-        if (_enclosing != null)
+        if (Enclosing != null)
         {
-            _enclosing.Assign(name, value);
+            Enclosing.Assign(name, value);
             return;
         }
         throw new RuntimeError(name, $"Undefined variable '{name.Lexeme}'.");
@@ -57,7 +57,7 @@ public class Environment
         var environment = this;
         for (var i = 0; i < distance; i++)
         {
-            if (environment != null) environment = environment._enclosing;
+            if (environment != null) environment = environment.Enclosing;
         }
 
         Debug.Assert(environment != null, nameof(environment) + " != null");
