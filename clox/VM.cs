@@ -1,4 +1,6 @@
-﻿namespace clox;
+﻿using System.Runtime.CompilerServices;
+
+namespace clox;
 
 public enum InterpretResult
 {
@@ -12,12 +14,11 @@ internal ref struct VM()
     private Chunk _chunk;
     private Stack<double> _stack = new(256);
 
-     public InterpretResult Interpret(ref Chunk chunk)
-    {
-        _chunk = chunk;
-        _ip = _chunk.Code.Span[0];
-        return Run();
-    }
+     public InterpretResult Interpret(ReadOnlySpan<char> source)
+     {
+         Compiler.Compile(source);
+         return InterpretResult.OK;
+     }
 
     private InterpretResult Run()
     {

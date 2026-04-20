@@ -1,26 +1,47 @@
 ﻿
 using clox;
 
-var vm = new VM();
-var chunk = new Chunk();
+if (args.Length == 0)
+{
+    Repl();
+}
+else if(args.Length == 1)
+{
+    RunFile(args[0]);
+}
+else
+{
+    Console.Error.WriteLine("Usage: clox [path]");
+    Environment.Exit(64);
+}
 
-chunk.WriteChunk((byte)OpCode.CONSTANT, 123);
-chunk.WriteChunk((byte)chunk.AddConstant(1.2), 123);
-
-chunk.WriteChunk((byte)OpCode.CONSTANT, 123);
-chunk.WriteChunk((byte)chunk.AddConstant(1.2), 123);
-
-chunk.WriteChunk((byte)OpCode.ADD, 123);
-
-chunk.WriteChunk((byte)OpCode.CONSTANT, 123);
-chunk.WriteChunk((byte)chunk.AddConstant(3.14), 123);
-
-chunk.WriteChunk((byte)OpCode.MULTIPLY, 123);
-chunk.WriteChunk((byte)OpCode.NEGATE, 123);
-
-chunk.WriteChunk((byte)OpCode.RETURN, 123);
-
-Console.WriteLine(vm.Interpret(ref chunk));
-
-chunk.Dispose();
 return 0;
+
+void Repl()
+{
+    var vm = new VM();
+    while (true)
+    {
+        Console.Write("> ");
+        var line = Console.ReadLine();
+        if (line is null)
+        {
+            break;
+        }
+
+        vm.Interpret(line.AsSpan());
+    }
+}
+
+void RunFile(string path)
+{
+    var vm = new VM();
+    try
+    {
+        vm.Interpret(File.ReadAllText(path).AsSpan());
+    }
+    catch (Exception e)
+    {
+        Console.Error.WriteLine(e.Message);
+    }
+}
