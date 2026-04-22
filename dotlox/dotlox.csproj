@@ -7,7 +7,7 @@
     <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
     <LangVersion>default</LangVersion>
     <PublishAot>true</PublishAot>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
   
   <ItemGroup>
